@@ -43,7 +43,7 @@ log_bin                 = /var/log/mysql/mysql-bin.log
 
 ### Lock database in order to record  position:
 FLUSH TABLES WITH READ LOCK; <br />
-SHOW MASTER STATUS;< <br />
+SHOW MASTER STATUS; <br />
 
 ~~~~
 mysql> SHOW MASTER STATUS;
@@ -55,6 +55,12 @@ mysql> SHOW MASTER STATUS;
 1 row in set (0.00 sec)
 ~~~~
 
+### SLAVE commands
+START SLAVE; <br />
+SHOW SLAVE STATUS\G; <br />
+
+If there is an issue in connecting we can try: <br />
+SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1; SLAVE START; 
 
 
 
