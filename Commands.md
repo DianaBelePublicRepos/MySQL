@@ -37,6 +37,6 @@ log_error = /var/log/mysql/error.log
 /var/log/mysql/mysql-bin.log
 
 ### Useful commands:
-SHOW DATABASES;
-USE <db_name>;
+SHOW DATABASES; <br />
+USE <db_name>; <br />
 log_bin                 = /var/log/mysql/mysql-bin.log
