@@ -40,3 +40,22 @@ log_error = /var/log/mysql/error.log
 SHOW DATABASES; <br />
 USE <db_name>; <br />
 log_bin                 = /var/log/mysql/mysql-bin.log
+
+### Lock database in order to record  position:
+FLUSH TABLES WITH READ LOCK; <br />
+SHOW MASTER STATUS;< <br />
+
+~~~~
+mysql> SHOW MASTER STATUS;
++------------------+----------+--------------+------------------+
+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++------------------+----------+--------------+------------------+
+| mysql-bin.000001 |      107 | newdatabase  |                  |
++------------------+----------+--------------+------------------+
+1 row in set (0.00 sec)
+~~~~
+
+
+
+
+
