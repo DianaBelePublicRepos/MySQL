@@ -26,3 +26,17 @@ expire_logs_days	= 10
 max_binlog_size         = 100M
 binlog_do_db		= newdatabase
 ~~~~
+
+### Error log is available here:
+log_error = /var/log/mysql/error.log
+
+### Config file:
+/etc/mysql/mysql.conf.d/mysqld.cnf
+
+### Log bin
+/var/log/mysql/mysql-bin.log
+
+### Useful commands:
+SHOW DATABASES;
+USE <db_name>;
+log_bin                 = /var/log/mysql/mysql-bin.log
