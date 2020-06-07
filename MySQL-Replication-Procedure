@@ -1,0 +1,80 @@
+
+MySQL replication process 
+This document covers the general process to configure MySQL master/slave replication. This document is for the DevOps team. The configurations are done on two hosts one serves as Master and the other as Replica
+Master Host
+Go to the master box and edit the configuration file. The configuration file location will depend on the MySql version. It could be /etc/mysql/mysql.conf.d/mysqld.cnf or /etc/mysql/my.cnf.
+ Replace the standard IP address with the private IP address of the master server.
+Bind-address = Private master server IP
+Make sure this line is uncommented: 									             server-id  = 1
+Uncomment the line that refers to log_bin:
+log_bin  = /var/log/mysql/mysql-bin.log
+Restart MySQL service: 
+sudo service mysql restart
+Open up the MySQL shell:
+sudo mysql -u root -p
+Make sure the slave user is available. You can run this command to check it:
+SELECT * FROM user;
+If it doesn't exist you can use this command to create your slave user and set up their password. The command should be in this format:
+GRANT REPLICATION SLAVE ON *.* TO 'slave_user'@'%' IDENTIFIED BY 'password';
+Follow up with:
+FLUSH PRIVILEGES;
+Lock the database to prevent any new changes:
+FLUSH TABLES WITH READ LOCK;
+Run the following command to check the master DB status:
+SHOW MASTER STATUS;
+
+You will see a table. Keep this table opened as you will need the information shown later. Leave this session open to maintain the READ LOCK.
+From a new terminal session, create the dump of all the databases from master:
+mysqldump --all-databases --single-transaction --user=root --password -r all_databases.sql
+Release the lock by running the command:
+UNLOCK TABLES;
+From your local machine copy the dump file from the master server.
+scp ubuntu@<master_ip>:/path/to_the_file/all_databases.sql local_path
+And from local copy it to the slave server:
+scp /<localpath>/all_databases.sql ubuntu@<slave_ip>:<local_path>
+
+
+Replica Host
+Configure the Slave Database. Once you have configured the master database, log into your slave server:
+Replace the standard IP address with the private IP address of the slave server.
+bind-address = Private slave server IP
+Make sure this line is uncommented and update it to any number different than 1 which is master:
+	server-id  = 2 
+Restart MySQL once again:
+sudo service mysql restart
+Import the database that you previously exported from the master database:
+mysql -u root -p < /path/to/<master-exported-db>.sql
+Ensure you can login to Master using the slave user from replica host:
+mysql -u slave_user -p -h <master_ip_address>
+Enable the replication from within the MySQL shell. On MySQL shell type in the following details, replacing the values to match your information:
+CHANGE MASTER TO MASTER_HOST='<master_address>',MASTER_USER='slave_user', MASTER_PASSWORD='<slave_user_password>', MASTER_LOG_FILE='<file>', MASTER_LOG_POS=<position>;
+The <file> is the file value from when you run SHOW MASTER STATUS; after locking the master read lock.
+The <position> is the position value from when you run SHOW MASTER STATUS; after locking the master read lock.
+
+Activate the slave server by running this command:
+START SLAVE;
+Check the details of the slave replication by typing in this command:
+SHOW SLAVE STATUS\G
+Check in the slave status if the replication is working. Both of the following values in the status output should be as follows:
+	Slave_IO_Running: Yes
+Slave_SQL_Running: Yes
+The value of Seconds_Behind_Master should be moving towards zero.
+Third Bridge Setup
+The setup is similar to the generic steps above in production. However, we do not restore from DB dump when we need to recover from a database replica failure.  This is because of the known issue with some table size in the database. We take an EBS snapshot of the data volume attached to the master. Prior to taking the snapshot to ensure the followings: 
+READ LOCK is applied to the DB
+Check the master DB status and make sure the MASTER_LOG_POS is noted
+Stop the instance and take the EBS snapshot
+The volume created from the snapshot is then mounted to the Replica host and Replica host is configured as the steps above.
+
+Troubleshooting
+If the replication fails after a period of successful replication, the first thing you can try is to stop and start the slave.
+START SLAVE;
+STOP SLAVE;
+
+You are able to see the details of the slave replication by typing in this command. The \G rearranges the text to make it more readable.
+SHOW SLAVE STATUS\G
+
+If there is an issue in connecting, you can try starting slave with a command to skip over it:
+SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1; SLAVE START; 
+
+
