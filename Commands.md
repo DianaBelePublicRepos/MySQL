@@ -62,6 +62,8 @@ SHOW SLAVE STATUS\G; <br />
 If there is an issue in connecting we can try: <br />
 SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1; SLAVE START; 
 
+Test connection to the master from the slave with: <br />
+mysql -u <slave_user> -p -h <master_ip_address>
 
 
 
